@@ -50,6 +50,18 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Modal Structure -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h4>Notification</h4>
+            <p id="modalMessage"></p>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close btn waves-effect waves-light">OK</a>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -61,7 +73,18 @@
             const apiKeyInput = document.getElementById('apiKeyInput');
             const saveApiKeyButton = document.getElementById('saveApiKeyButton');
             const loadingIndicator = document.getElementById('loadingIndicator');
+            const modal = document.getElementById('modal');
+            const modalMessage = document.getElementById('modalMessage');
             let wakeLock = null;
+
+            M.Modal.init(modal);
+
+            function showModal(message) {
+                console.log(message);
+                modalMessage.textContent = message;
+                const instance = M.Modal.getInstance(modal);
+                instance.open();
+            }
 
             // Load existing receipts from local storage
             const receipts = JSON.parse(localStorage.getItem('receipts')) || [];
@@ -216,11 +239,11 @@
                                 displayReceipts();
                             } else {
                                 console.error('Unexpected response format:', data);
-                                alert('Failed to process receipt. Check console for details.');
+                                showModal('Failed to process receipt. Check console for details.');
                             }
                         } catch (error) {
                             console.error('Error processing image:', error);
-                            alert('Error processing receipt: ' + error.message);
+                            showModal('Error processing receipt: ' + error.message);
                         } finally {
                             processedCount++;
                             loadingIndicator.textContent = `Processing ${processedCount} out of ${files.length}`;
@@ -296,9 +319,10 @@
                         console.log('Share successful');
                     }).catch(error => {
                         console.error('Error sharing:', error);
+                        showModal('Error sharing: ' + error.message);
                     });
                 } else {
-                    alert('Web Share API is not supported in your browser.');
+                    showModal('Web Share API is not supported in your browser.');
                 }
             }
 
@@ -321,7 +345,7 @@
                 console.log('Saving API key');
                 const apiKey = apiKeyInput.value;
                 localStorage.setItem('apiKey', apiKey);
-                alert('API key saved successfully.');
+                showModal('API key saved successfully.');
             }
 
             saveApiKeyButton.addEventListener('click', saveApiKey);
