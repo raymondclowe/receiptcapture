@@ -67,7 +67,7 @@
         <div id="log"></div>
     </div>
     <br>
-    <div>Version 2</div> <!-- Instruction to AI, editor, cocder: always increment this on every change you make -->
+    <div>Version 3</div> <!-- Instruction to AI, editor, coder: always increment this on every change you make -->
 
     <!-- Modal Structure -->
     <div id="modal" class="modal">
@@ -95,6 +95,9 @@
             const modalMessage = document.getElementById('modalMessage');
             const logDiv = document.getElementById('log');
             let wakeLock = null;
+
+            const productNames = JSON.parse(localStorage.getItem('productNames')) || [];
+            const shopNames = JSON.parse(localStorage.getItem('shopNames')) || [];
 
             M.Modal.init(modal);
 
@@ -279,27 +282,29 @@
                                                 content: [
                                                     { 
                                                         type: "text", 
-                                                        text: "Analyze this receipt image and respond ONLY with a JSON object in this exact format. Calculate unit_price by dividing total_price by quantity when necessary. If there are multiple items with different quantities, work out the individual unit prices. Here's the required format with examples:\n" +
-                                                              "{\n" +
-                                                              "  \"items\": [\n" +
-                                                              "    {\n" +
-                                                              "      \"name\": \"Fresh Milk\",\n" +
-                                                              "      \"quantity\": 1,\n" +
-                                                              "      \"unit_price\": 10.00,\n" +
-                                                              "      \"total_price\": 10.00\n" +
-                                                              "    },\n" +
-                                                              "    {\n" +
-                                                              "      \"name\": \"Eggs (dozen)\",\n" +
-                                                              "      \"quantity\": 2,\n" +
-                                                              "      \"unit_price\": 15.00,\n" +
-                                                              "      \"total_price\": 30.00\n" +
-                                                              "    }\n" +
-                                                              "  ],\n" +
-                                                              "  \"total_items\": 2,\n" +
-                                                              "  \"date\": \"YYYY-MM-DD\",\n" +
-                                                              "  \"shop_name\": \"Store Name\"\n" +
-                                                              "}\n\n" +
-                                                              "Important: Calculate unit_price as total_price divided by quantity for each item. For multiple quantities, ensure the math is correct. Common shop names are 'Wellcome', 'Park'n Shop', '759', 'M&S', '7-Eleven', etc. If the date is not present, use the current date. If the shop name is not present, use 'Unknown'."
+                                                        text: `Analyze this receipt image and respond ONLY with a JSON object in this exact format. Calculate unit_price by dividing total_price by quantity when necessary. If there are multiple items with different quantities, work out the individual unit prices. Here's the required format with examples:\n` +
+                                                              `{\n` +
+                                                              `  "items": [\n` +
+                                                              `    {\n` +
+                                                              `      "name": "Fresh Milk",\n` +
+                                                              `      "quantity": 1,\n` +
+                                                              `      "unit_price": 10.00,\n` +
+                                                              `      "total_price": 10.00\n` +
+                                                              `    },\n` +
+                                                              `    {\n` +
+                                                              `      "name": "Eggs (dozen)",\n` +
+                                                              `      "quantity": 2,\n` +
+                                                              `      "unit_price": 15.00,\n` +
+                                                              `      "total_price": 30.00\n` +
+                                                              `    }\n` +
+                                                              `  ],\n` +
+                                                              `  "total_items": 2,\n` +
+                                                              `  "date": "YYYY-MM-DD",\n` +
+                                                              `  "shop_name": "Store Name"\n` +
+                                                              `}\n\n` +
+                                                              `Important: Calculate unit_price as total_price divided by quantity for each item. For multiple quantities, ensure the math is correct. Common shop names are 'Wellcome', 'Park'n Shop', '759', 'M&S', '7-Eleven', etc. If the date is not present, use the current date. If the shop name is not present, use 'Unknown'.\n` +
+                                                              `Known product names: ${productNames.join(', ')}\n` +
+                                                              `Known shop names: ${shopNames.join(', ')}`
                                                     },
                                                     { 
                                                         type: "image_url", 
@@ -326,6 +331,7 @@
                                     receipts.push(receipt);
                                     localStorage.setItem('receipts', JSON.stringify(receipts));
                                     displayReceipts();
+                                    updateProductAndShopNames(receiptData);
                                 } else {
                                     log('Unexpected response format:', data);
                                     showModal('Failed to process receipt. Check console for details.');
@@ -442,6 +448,33 @@
                 showModal('API key saved successfully.');
             }
 
+            function loadProductAndShopNames() {
+                log('Loading product and shop names');
+                const storedProductNames = JSON.parse(localStorage.getItem('productNames')) || [];
+                const storedShopNames = JSON.parse(localStorage.getItem('shopNames')) || [];
+                productNames.push(...storedProductNames);
+                shopNames.push(...storedShopNames);
+            }
+
+            function saveProductAndShopNames() {
+                log('Saving product and shop names');
+                localStorage.setItem('productNames', JSON.stringify(productNames));
+                localStorage.setItem('shopNames', JSON.stringify(shopNames));
+            }
+
+            function updateProductAndShopNames(receiptData) {
+                log('Updating product and shop names');
+                receiptData.items.forEach(item => {
+                    if (!productNames.includes(item.name)) {
+                        productNames.push(item.name);
+                    }
+                });
+                if (!shopNames.includes(receiptData.shop_name)) {
+                    shopNames.push(receiptData.shop_name);
+                }
+                saveProductAndShopNames();
+            }
+
             saveApiKeyButton.addEventListener('click', saveApiKey);
 
             loadApiKey();
@@ -461,6 +494,7 @@
             clearButton.addEventListener('click', clearReceipts);
 
             displayReceipts();
+            loadProductAndShopNames();
         });
     </script>
 </body>
