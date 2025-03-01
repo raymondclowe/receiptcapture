@@ -67,7 +67,7 @@
         <div id="log"></div>
     </div>
     <br>
-    <div>Version 3</div> <!-- Instruction to AI, editor, coder: always increment this on every change you make -->
+    <div>Version 4</div> <!-- Instruction to AI, editor, coder: always increment this on every change you make -->
 
     <!-- Modal Structure -->
     <div id="modal" class="modal">
@@ -282,7 +282,7 @@
                                                 content: [
                                                     { 
                                                         type: "text", 
-                                                        text: `Analyze this receipt image and respond ONLY with a JSON object in this exact format. Calculate unit_price by dividing total_price by quantity when necessary. If there are multiple items with different quantities, work out the individual unit prices. Here's the required format with examples:\n` +
+                                                        text: `Analyze this receipt image and respond ONLY with a JSON object in this exact format. Calculate unit_price by dividing total_price by quantity when necessary. If there are multiple items with different quantities, work out the individual unit prices. If there is a discount then show the final discounted price. If the item names contain Chinese then translate them to English. Here's the required format with examples:\n` +
                                                               `{\n` +
                                                               `  "items": [\n` +
                                                               `    {\n` +
