@@ -37,6 +37,11 @@
             padding: 5px 10px;
             margin-left: 10px;
         }
+        #loadingIndicator {
+            display: none;
+            font-size: 18px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -49,6 +54,7 @@
     <button id="uploadButton">Upload Receipt</button>
     <button id="shareButton">Share Receipts</button>
     <button id="clearButton">Clear Receipts</button>
+    <div id="loadingIndicator">Processing, please wait...</div>
     <table id="receiptTable">
         <thead>
             <tr>
@@ -73,6 +79,7 @@
             const receiptTableBody = document.querySelector('#receiptTable tbody');
             const apiKeyInput = document.getElementById('apiKeyInput');
             const saveApiKeyButton = document.getElementById('saveApiKeyButton');
+            const loadingIndicator = document.getElementById('loadingIndicator');
 
             // Load existing receipts from local storage
             const receipts = JSON.parse(localStorage.getItem('receipts')) || [];
@@ -150,6 +157,7 @@
 
                     try {
                         console.log('Sending request to API');
+                        setLoadingState(true);
                         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                             method: 'POST',
                             headers: {
@@ -220,9 +228,20 @@
                     } catch (error) {
                         console.error('Error processing image:', error);
                         alert('Error processing receipt: ' + error.message);
+                    } finally {
+                        setLoadingState(false);
                     }
                 };
                 reader.readAsDataURL(file);
+            }
+
+            function setLoadingState(isLoading) {
+                loadingIndicator.style.display = isLoading ? 'block' : 'none';
+                uploadButton.disabled = isLoading;
+                shareButton.disabled = isLoading;
+                clearButton.disabled = isLoading;
+                apiKeyInput.disabled = isLoading;
+                saveApiKeyButton.disabled = isLoading;
             }
 
             function generateCSV() {
@@ -266,7 +285,8 @@
             function clearReceipts() {
                 console.log('Clearing receipts');
                 localStorage.removeItem('receipts');
-                displayReceipts();
+                receipts.length = 0; // Clear the in-memory array
+                displayReceipts(); // Clear the table on the screen
             }
 
             function loadApiKey() {
