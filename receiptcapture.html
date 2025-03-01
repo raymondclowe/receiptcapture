@@ -61,6 +61,7 @@
             const apiKeyInput = document.getElementById('apiKeyInput');
             const saveApiKeyButton = document.getElementById('saveApiKeyButton');
             const loadingIndicator = document.getElementById('loadingIndicator');
+            let wakeLock = null;
 
             // Load existing receipts from local storage
             const receipts = JSON.parse(localStorage.getItem('receipts')) || [];
@@ -137,6 +138,7 @@
                 async function processNextImage() {
                     if (queue.length === 0) {
                         setLoadingState(false);
+                        releaseWakeLock();
                         return;
                     }
 
@@ -230,7 +232,27 @@
 
                 loadingIndicator.textContent = `Processing 0 out of ${files.length}`;
                 setLoadingState(true);
+                requestWakeLock();
                 processNextImage();
+            }
+
+            async function requestWakeLock() {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock is active');
+                } catch (err) {
+                    console.error(`${err.name}, ${err.message}`);
+                }
+            }
+
+            function releaseWakeLock() {
+                if (wakeLock !== null) {
+                    wakeLock.release()
+                        .then(() => {
+                            console.log('Wake Lock was released');
+                            wakeLock = null;
+                        });
+                }
             }
 
             function setLoadingState(isLoading) {
