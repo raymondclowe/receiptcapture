@@ -411,10 +411,16 @@
             function shareReceipts() {
                 log('Sharing receipts');
                 const csvContent = generateCSV();
+                const dateTimeString = new Date().toISOString().replace(/[:.]/g, '-');
+                const filename = `Receipt_Capture_${dateTimeString}.csv`;
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+            
                 if (navigator.share) {
                     navigator.share({
                         title: 'Receipt Data',
-                        text: csvContent
+                        text: csvContent,
+                        files: [new File([blob], filename, { type: 'text/csv' })]
                     }).then(() => {
                         log('Share successful');
                     }).catch(error => {
@@ -422,7 +428,13 @@
                         showModal('Error sharing: ' + error.message);
                     });
                 } else {
-                    showModal('Web Share API is not supported in your browser.');
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    showModal('Web Share API is not supported in your browser. The file has been downloaded instead.');
                 }
             }
 
